@@ -13,7 +13,7 @@ module Application
 import           Snap.Extension
 import           Snap.Extension.Heist.Impl
 import           Snap.Extension.Timer.Impl
-
+import		 Snap.Extension.DB.MongoDB
 
 ------------------------------------------------------------------------------
 -- | 'Application' is our application's monad. It uses 'SnapExtend' from
@@ -30,6 +30,7 @@ type Application = SnapExtend ApplicationState
 data ApplicationState = ApplicationState
     { templateState :: HeistState Application
     , timerState    :: TimerState
+    , dbState       ;: MongoDBState
     }
 
 
@@ -44,6 +45,10 @@ instance HasTimerState ApplicationState where
     getTimerState     = timerState
     setTimerState s a = a { timerState = s }
 
+------------------------------------------------------------------------------
+instance HasMongoDBState ApplicationState where
+    getMongoDBState     = dbState
+    setMongoDBState s a = a { dbState = s }
 
 ------------------------------------------------------------------------------
 -- | The 'Initializer' for ApplicationState. For more on 'Initializer's, see
@@ -55,4 +60,5 @@ applicationInitializer :: Initializer ApplicationState
 applicationInitializer = do
     heist <- heistInitializer "resources/templates"
     timer <- timerInitializer
-    return $ ApplicationState heist timer
+    db    <- mongoDBInitialize (Host "127.0.0.1" $ PortNumber 27017) 1 "store"
+    return $ ApplicationState heist timer db
